@@ -3,8 +3,6 @@
 #include <lauxlib.h>
 #include <usdt.h>
 
-#include <stdio.h>
-
 typedef struct usdt_provider_obj {
         usdt_provider_t *provider;
 } usdt_provider_obj_t;
