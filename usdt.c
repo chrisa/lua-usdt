@@ -3,22 +3,14 @@
 #include <lauxlib.h>
 #include <usdt.h>
 
-typedef struct usdt_provider_obj {
-        usdt_provider_t *provider;
-} usdt_provider_obj_t;
-
-typedef struct usdt_probedef_obj {
-        usdt_probedef_t *probedef;
-} usdt_probedef_obj_t;
-
 static int
 provider(lua_State *L)
 {
         const char *name = luaL_checklstring(L, 1, NULL);
         const char *module = luaL_checklstring(L, 2, NULL);
-        usdt_provider_obj_t *object = lua_newuserdata(L, sizeof(usdt_provider_obj_t));
+        usdt_provider_t **object = lua_newuserdata(L, sizeof(usdt_provider_t *));
 
-        object->provider = usdt_create_provider(name, module);
+        *object = usdt_create_provider(name, module);
 
         luaL_getmetatable(L, "usdt_provider_t");
         lua_setmetatable(L, -2);
@@ -28,7 +20,8 @@ provider(lua_State *L)
 static int
 provider_probe(lua_State *L)
 {
-        usdt_provider_obj_t *self = luaL_checkudata(L, 1, "usdt_provider_t");
+        usdt_provider_t **self = luaL_checkudata(L, 1, "usdt_provider_t");
+        usdt_probedef_t **object;
         const char *name = luaL_checklstring(L, 2, NULL);
         const char *func = luaL_checklstring(L, 3, NULL);
         const char *argv[6];
@@ -44,9 +37,9 @@ provider_probe(lua_State *L)
                 }
         }
 
-        usdt_probedef_obj_t *object = lua_newuserdata(L, sizeof(usdt_probedef_t *));
-        object->probedef = usdt_create_probe(name, func, argc, argv);
-        usdt_provider_add_probe(self->provider, object->probedef);
+        object = lua_newuserdata(L, sizeof(usdt_probedef_t *));
+        *object = usdt_create_probe(name, func, argc, argv);
+        usdt_provider_add_probe(*self, *object);
 
         luaL_getmetatable(L, "usdt_probedef_t");
         lua_setmetatable(L, -2);
@@ -56,26 +49,27 @@ provider_probe(lua_State *L)
 static int
 provider_enable(lua_State *L)
 {
-        usdt_provider_obj_t *self = luaL_checkudata(L, 1, "usdt_provider_t");
-        usdt_provider_enable(self->provider);
+        usdt_provider_t **self = luaL_checkudata(L, 1, "usdt_provider_t");
+        usdt_provider_enable(*self);
         return 0;
 }
 
 static int
 probedef_fire(lua_State *L)
 {
-        usdt_probedef_obj_t *self = luaL_checkudata(L, 1, "usdt_probedef_t");
+        usdt_probedef_t **self = luaL_checkudata(L, 1, "usdt_probedef_t");
+        usdt_probedef_t *probedef = *self;
         void *argv[6];
         int i;
 
-        for (i = 0; i < self->probedef->argc; i++) {
-                if (self->probedef->types[i] == USDT_ARGTYPE_STRING) {
+        for (i = 0; i < probedef->argc; i++) {
+                if (probedef->types[i] == USDT_ARGTYPE_STRING) {
                         if (lua_isstring(L, i + 2))
                                 argv[i] = (void *)luaL_checkstring(L, i + 2);
                         else
                                 argv[i] = NULL;
                 }
-                else if (self->probedef->types[i] == USDT_ARGTYPE_INTEGER) {
+                else if (probedef->types[i] == USDT_ARGTYPE_INTEGER) {
                         if (lua_isnumber(L, i + 2))
                                 argv[i] = (void *)luaL_checkinteger(L, i + 2);
                         else
@@ -86,15 +80,16 @@ probedef_fire(lua_State *L)
                 }
         }
 
-        usdt_fire_probe(self->probedef->probe, self->probedef->argc, argv);
+        usdt_fire_probe(probedef->probe, probedef->argc, argv);
         return 0;
 }
 
 static int
 probedef_enabled(lua_State *L)
 {
-        usdt_probedef_obj_t *self = luaL_checkudata(L, 1, "usdt_probedef_t");
-        int is = usdt_is_enabled(self->probedef->probe);
+        usdt_probedef_t **self = luaL_checkudata(L, 1, "usdt_probedef_t");
+        usdt_probedef_t *probedef = *self;
+        int is = usdt_is_enabled(probedef->probe);
         lua_pushinteger(L, is);
         return 1;
 }
