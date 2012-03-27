@@ -1,15 +1,13 @@
 require("usdt")
-print("loaded usdt")
-print(usdt)
 provider = usdt.provider("lua", "lmod")
-print(provider)
 
-probe = provider.probe(provider, "foo1", "bar1", "int")
-print(probe)
+iprobe = provider:probe("foo", "iprobe", "int", "int", "int", "int", "int", "int")
+cprobe = provider:probe("foo", "cprobe", "char *", "char *", "char *", "char *", "char *", "char *")
+provider:enable()
 
-provider.enable(provider)
-print("enabled provider")
-
-if (probe.enabled(probe)) then
-  probe.fire(probe)
+if (iprobe:enabled()) then
+  iprobe:fire(1, 2, 3, 4, 5, 6)
+end
+if (cprobe:enabled()) then
+  cprobe:fire("a", "b", "c", "d", "e", "f")
 end

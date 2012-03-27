@@ -33,9 +33,21 @@ provider_probe(lua_State *L)
         usdt_provider_obj_t *self = luaL_checkudata(L, 1, "usdt_provider_t");
         const char *name = luaL_checklstring(L, 2, NULL);
         const char *func = luaL_checklstring(L, 3, NULL);
+        const char *argv[6];
+        int i, argc = 0;
+
+        for (i = 0; i < 6; i++) {
+                if (lua_isstring(L, i + 4)) {
+                        argv[i] = luaL_checkstring(L, i + 4);
+                        argc++;
+                }
+                else {
+                        argv[i] = NULL;
+                }
+        }
 
         usdt_probedef_obj_t *object = lua_newuserdata(L, sizeof(usdt_probedef_t *));
-        object->probedef = usdt_create_probe(name, func, 0, NULL);
+        object->probedef = usdt_create_probe(name, func, argc, argv);
         usdt_provider_add_probe(self->provider, object->probedef);
 
         luaL_getmetatable(L, "usdt_probedef_t");
@@ -55,7 +67,28 @@ static int
 probedef_fire(lua_State *L)
 {
         usdt_probedef_obj_t *self = luaL_checkudata(L, 1, "usdt_probedef_t");
-        usdt_fire_probe(self->probedef->probe, 0, NULL);
+        void *argv[6];
+        int i;
+
+        for (i = 0; i < self->probedef->argc; i++) {
+                if (self->probedef->types[i] == USDT_ARGTYPE_STRING) {
+                        if (lua_isstring(L, i + 2))
+                                argv[i] = (void *)luaL_checkstring(L, i + 2);
+                        else
+                                argv[i] = NULL;
+                }
+                else if (self->probedef->types[i] == USDT_ARGTYPE_INTEGER) {
+                        if (lua_isnumber(L, i + 2))
+                                argv[i] = (void *)luaL_checkinteger(L, i + 2);
+                        else
+                                argv[i] = NULL;
+                }
+                else {
+                        argv[i] = NULL;
+                }
+        }
+
+        usdt_fire_probe(self->probedef->probe, self->probedef->argc, argv);
         return 0;
 }
 
