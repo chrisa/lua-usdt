@@ -24,10 +24,10 @@ provider_probe(lua_State *L)
         usdt_probedef_t **object;
         const char *name = luaL_checklstring(L, 2, NULL);
         const char *func = luaL_checklstring(L, 3, NULL);
-        const char *argv[6];
+        const char *argv[USDT_ARG_MAX];
         int i, argc = 0;
 
-        for (i = 0; i < 6; i++) {
+        for (i = 0; i < USDT_ARG_MAX; i++) {
                 if (lua_isstring(L, i + 4)) {
                         argv[i] = luaL_checkstring(L, i + 4);
                         argc++;
@@ -59,7 +59,7 @@ probedef_fire(lua_State *L)
 {
         usdt_probedef_t **self = luaL_checkudata(L, 1, "usdt_probedef_t");
         usdt_probedef_t *probedef = *self;
-        void *argv[6];
+        void *argv[USDT_ARG_MAX];
         int i;
 
         for (i = 0; i < probedef->argc; i++) {

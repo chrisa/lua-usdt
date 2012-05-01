@@ -30,8 +30,8 @@ build = {
         usdt = {
             sources = "usdt.c",
             libraries = "usdt",
-            incdirs = {"$(USDT_INCDIR)"},
-            libdirs = {"$(USDT_LIBDIR)"}
+            incdirs = {"libusdt"},
+            libdirs = {"libusdt"}
         }
     }
 }
