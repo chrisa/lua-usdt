@@ -2,6 +2,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <usdt.h>
+#include <string.h>
 
 static int
 provider(lua_State *L)
@@ -55,6 +56,14 @@ provider_enable(lua_State *L)
 }
 
 static int
+provider_disable(lua_State *L)
+{
+        usdt_provider_t **self = luaL_checkudata(L, 1, "usdt_provider_t");
+        usdt_provider_disable(*self);
+        return 0;
+}
+
+static int
 probedef_fire(lua_State *L)
 {
         usdt_probedef_t **self = luaL_checkudata(L, 1, "usdt_probedef_t");
@@ -63,13 +72,13 @@ probedef_fire(lua_State *L)
         int i;
 
         for (i = 0; i < probedef->argc; i++) {
-                if (probedef->types[i] == USDT_ARGTYPE_STRING) {
+                if (strncmp(probedef->types[i], "char *", 6) == 0) {
                         if (lua_isstring(L, i + 2))
                                 argv[i] = (void *)luaL_checkstring(L, i + 2);
                         else
                                 argv[i] = NULL;
                 }
-                else if (probedef->types[i] == USDT_ARGTYPE_INTEGER) {
+                else if (strncmp(probedef->types[i], "int", 3) == 0) {
                         if (lua_isnumber(L, i + 2))
                                 argv[i] = (void *)luaL_checkinteger(L, i + 2);
                         else
@@ -102,6 +111,7 @@ static const luaL_reg usdt_functions[] = {
 static const luaL_reg usdt_provider_methods[] = {
         {"probe", provider_probe},
         {"enable", provider_enable},
+        {"disable", provider_disable},
         {NULL, NULL}
 };
 

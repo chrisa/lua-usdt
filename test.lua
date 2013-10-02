@@ -1,8 +1,16 @@
 require("usdt")
 provider = usdt.provider("lua", "lmod")
 
-iprobe = provider:probe("foo", "iprobe", "int", "int", "int", "int", "int", "int", "int", "int", "int", "int")
-cprobe = provider:probe("foo", "cprobe", "char *", "char *", "char *", "char *", "char *", "char *", "char *", "char *", "char *", "char *")
+iprobe = provider:probe("foo", "iprobe",
+                        "int", "int", "int", "int",
+                        "int", "int", "int", "int",
+                        "int", "int")
+
+cprobe = provider:probe("foo", "cprobe",
+                        "char *", "char *", "char *", "char *",
+                        "char *", "char *", "char *", "char *",
+                        "char *", "char *")
+
 provider:enable()
 
 if (iprobe:enabled()) then
@@ -11,3 +19,5 @@ end
 if (cprobe:enabled()) then
   cprobe:fire("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")
 end
+
+provider:disable()
