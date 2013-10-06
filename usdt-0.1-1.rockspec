@@ -6,9 +6,9 @@ source = {
 description = {
    summary = "C extension for DTrace USDT providers",
    detailed = [[
-    Foo
+     Lua bindings for libusdt, providing dynamic DTrace USDT providers.
    ]],
-   homepage = "http://chrisa.github.com",
+   homepage = "https://github.com/chrisa/lua-usdt",
    license = "MIT/X11"
 }
 dependencies = {

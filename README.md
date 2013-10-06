@@ -14,7 +14,7 @@ Build with first:
 and then:
 
 ```
-  luarocks build usdt-0.1-1.rockspec USDT_INCDIR=libusdt
+  luarocks --local build usdt-0.1-1.rockspec USDT_INCDIR=libusdt
 ```
 
 Test:
